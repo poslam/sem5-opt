@@ -17,6 +17,7 @@ B = np.array(
 )
 
 A = np.dot(B.T, B)
+
 b = np.array([1, 2, 3, 14, 5, 6]).T
 x0 = np.array([1, 1, 2, 1, 1, 1]).T
 
@@ -76,6 +77,7 @@ delta_f = abs(f(xk) - f_a)
 
 print(
     f"""
+A: {A}
 steps: {steps}
 xk: {xk}
 solution: {solution}
