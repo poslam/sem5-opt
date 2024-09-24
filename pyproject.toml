@@ -3,11 +3,11 @@ name = "labs"
 version = "0.1.0"
 description = ""
 authors = ["poslam <kirden04@gmail.com>"]
-readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.12"
 numpy = "^2.1.1"
+sympy = "^1.13.3"
 
 
 [build-system]
