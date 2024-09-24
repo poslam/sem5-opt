@@ -1,10 +1,9 @@
-from datetime import datetime
-
+import matplotlib.pyplot as plt
 import numpy as np
-from sympy import Matrix, lambdify, solve, symbols
+from sympy import solve, symbols
 
-l = 10 ** (-4)
-ksi = 10 ** (-5)
+l = 10**-4
+ksi = 10**-5
 
 B = np.array(
     [
@@ -17,44 +16,77 @@ B = np.array(
     ]
 )
 
-A = Matrix(B.T @ B)
-b = Matrix([1, 2, 3, 14, 5, 6]).T
-x0 = np.array([1, 1, 2, 1, 1, 1])
+A = np.dot(B.T, B)
+b = np.array([1, 2, 3, 14, 5, 6]).T
+x0 = np.array([1, 1, 2, 1, 1, 1]).T
 
-x = Matrix(symbols("x:6"))
+f = lambda x: 0.5 * np.dot(np.dot(x.T, A), x) + np.dot(b, x)
+f_d = lambda x: 0.5 * np.dot((A.T + A), x) + b
 
-f = 0.5 * x.T * A * x + b * x
+# точное
 
-grad_f = 0.5 * (A.T + A) * x + b.T
-grad_f_l = lambda x: 0.5 * (A.T + A) * x + b.T
+x = symbols("x0 x1 x2 x3 x4 x5")
 
-solution = solve(grad_f, x)
+solution = list(solve(f_d(x), x).values())
 
-# print(
-#     solution,
-#     "\n",
-#     f.subs(solution)[0],
-#     "\n",
-#     lambdify(x, f)(*x0)[0][0],
-# )
+# градиент
 
 xk = x0
-xk1 = xk - l * grad_f_l(xk)
+xk1 = xk - l * f_d(xk)
 
-print(xk, xk1)
-# norm = np.linalg.norm(xk1 - xk)
+norm = np.linalg.norm(xk1 - xk)
 
 xk_array = [xk]
+f_values = [f(xk)]
 
-# while norm >= ksi:
-#     xk = xk1
-#     xk1 = xk - l * grad_f_l(xk)
+while norm >= ksi:
+    xk = xk1
+    xk1 = xk - l * f_d(xk)
 
-#     norm = np.linalg.norm(xk1 - xk)
+    norm = np.linalg.norm(xk1 - xk)
 
-#     xk_array.append(xk)
+    xk_array.append(xk)
+    f_values.append(f(xk))
 
-#     print(len(xk_array), norm)
+steps = len(xk_array)
 
-#     if len(xk_array) > 1000:
-#         break
+# промежуточные результаты
+
+pr = [
+    (xk_array[i], f(xk_array[i]))
+    for i in [
+        steps // 4,
+        steps // 2,
+        steps // 4 * 3,
+        steps - 1,
+    ]
+]
+
+# x*
+
+x_a = -np.dot(np.linalg.inv(A), b)
+f_a = f(x_a)
+
+# delta
+
+delta_x = [abs(xk[i] - solution[i]) for i in range(len(xk))]
+delta_f = abs(f(xk) - f_a)
+
+# print
+
+print(
+    f"""
+steps: {steps}
+xk: {xk}
+solution: {solution}
+f_a: {f_a}
+pr: {pr}
+delta x: {delta_x}
+delta f: {delta_f}
+      """
+)
+
+# img
+
+plt.plot(range(len(xk_array)), f_values)
+plt.show()
