@@ -24,6 +24,11 @@ x0 = np.array([1, 1, 2, 1, 1, 1]).T
 f = lambda x: 0.5 * np.dot(np.dot(x.T, A), x) + np.dot(b, x)
 f_d = lambda x: 0.5 * np.dot((A.T + A), x) + b
 
+# проверка пол. определенности
+
+eigenvalues = np.linalg.eig(A)[0]
+B_det = np.linalg.det(B)
+
 # точное
 
 x = symbols("x0 x1 x2 x3 x4 x5")
@@ -78,6 +83,9 @@ delta_f = abs(f(xk) - f_a)
 print(
     f"""
 A: {A}
+eigvals: {eigenvalues}
+B_det: {B_det}
+A_is_correct: {all([i > 0 for i in eigenvalues]) and B_det != 0}
 steps: {steps}
 xk: {xk}
 solution: {solution}
