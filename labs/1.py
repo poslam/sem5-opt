@@ -83,15 +83,25 @@ delta_f = abs(f(xk) - f_a)
 print(
     f"""
 A: {A}
+
 eigvals: {eigenvalues}
+
 B_det: {B_det}
+
 A_is_correct: {all([i > 0 for i in eigenvalues]) and B_det != 0}
+
 steps: {steps}
+
 xk: {xk}
+
 solution: {solution}
+
 f_a: {f_a}
+
 pr: {pr}
+
 delta x: {delta_x}
+
 delta f: {delta_f}
       """
 )
