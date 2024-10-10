@@ -9,6 +9,9 @@ db_data/
 *.python
 *.dump
 *.sql
+*.lock
+
+matrix.docx
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

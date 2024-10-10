@@ -9,6 +9,7 @@ python = "^3.12"
 numpy = "^2.1.1"
 sympy = "^1.13.3"
 matplotlib = "^3.9.2"
+pypandoc = "^1.14"
 
 
 [build-system]
