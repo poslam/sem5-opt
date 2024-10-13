@@ -1,5 +1,6 @@
 import numpy as np
 import sympy as sp
+
 from other.script import matrices_to_word
 
 eps = 1e-6
@@ -49,34 +50,50 @@ x_min, f_res, norm = solve_y_eq_0(A, b, x0, r, f).values()
 
 # y > 0
 
-f_1 = lambda x, y: np.array(
+# f_1 = lambda x, y: np.array(
+#     [
+#         [(A + 2 * np.identity(4) @ y) @ x + (b + 2 * y @ x0), 0],
+#         [np.linalg.norm(x - x0) ** 2 - r**2, 0],
+#     ]
+# )
+
+
+f_1 = lambda x, y: np.concatenate(
     [
-        [(A + 2 * np.identity(4) @ y) @ x + (b + 2 * y @ x0), 0],
-        [np.linalg.norm(x - x0) ** 2 - r**2, 0],
+        (A + 2 * np.identity(4) * y) @ x[:4] + (b + 2 * y * x0),
+        np.array([np.linalg.norm(x[:4] - x0) ** 2 - r**2]),
     ]
 )
-f_1_diff = lambda x, y: np.array(
+
+# f_1_diff = lambda x, y: np.array(
+#     [
+#         [A + 2 * np.identity(4) * y, 2 * (x - x0)],
+#         [2 * (x - x0).T, 0],
+#     ]
+# )
+
+f_1_diff = lambda x, y: np.block(
     [
-        [A + 2 * np.identity(4) * y, 2 * (x - x0)],
-        [2 * (x - x0).T, 0],
+        [A + 2 * np.identity(4) * y, 2 * (x - x0).reshape(-1, 1)],
+        [2 * (x - x0).reshape(1, -1), 0],
     ]
 )
 
 vectors = [
-    np.array([0.1, 0.2, 0.3, 0.4, r]),
-    np.array([0.6, 0.7, 0.8, 0.9, r]),
-    np.array([1.1, 1.2, 1.3, 1.4, r]),
-    np.array([1.6, 1.7, 1.8, 1.9, r]),
-    np.array([2.1, 2.2, 2.3, 2.4, r]),
-    np.array([2.6, 2.7, 2.8, 2.9, r]),
-    np.array([3.1, 3.2, 3.3, 3.4, r]),
-    np.array([3.6, 3.7, 3.8, 3.9, r]),
+    np.array([0.1, 0.2, 0.3, 0.4]),
+    np.array([0.6, 0.7, 0.8, 0.9]),
+    np.array([1.1, 1.2, 1.3, 1.4]),
+    np.array([1.6, 1.7, 1.8, 1.9]),
+    np.array([2.1, 2.2, 2.3, 2.4]),
+    np.array([2.6, 2.7, 2.8, 2.9]),
+    np.array([3.1, 3.2, 3.3, 3.4]),
+    np.array([3.6, 3.7, 3.8, 3.9]),
 ]
 
 
 for x0 in vectors:
     xk = x0
-    xk1 = xk - np.linalg.inv(f_1_diff(xk, 1)) @ f_1(xk, 1)
+    xk1 = xk - np.linalg.inv(f_1_diff(xk, r)) @ f_1(xk, r)
 
     norm = np.linalg.norm(xk1 - xk)
 
