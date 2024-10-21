@@ -10,6 +10,8 @@ numpy = "^2.1.1"
 sympy = "^1.13.3"
 matplotlib = "^3.9.2"
 pypandoc = "^1.14"
+black = "^24.10.0"
+scipy = "^1.14.1"
 
 
 [build-system]

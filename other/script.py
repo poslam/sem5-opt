@@ -9,7 +9,7 @@ def matrix_to_md(matrix):
     shape = matrix.shape
     matrix_str = r"\begin{bmatrix}"
 
-    for i in range(shape[0]):            
+    for i in range(shape[0]):
         row_str = " & ".join(map(str, matrix[i]))
         matrix_str += row_str + r" \\ "  # Используем \\ для перехода на новую строку
     matrix_str = matrix_str[:-3]  # Убираем последний перевод строки
@@ -35,7 +35,7 @@ $$
 def matrices_to_word(matrices, open_file=False):
     if not isinstance(matrices, list):
         matrices = [matrices]
-        
+
     markdown_content = matrices_to_md(matrices)
 
     output_file = "other/matrix.docx"
