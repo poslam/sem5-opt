@@ -5,12 +5,13 @@ import pypandoc
 
 
 def matrix_to_md(matrix):
-    """Конвертирует numpy-массив в строку LaTeX для матрицы."""
     shape = matrix.shape
-    matrix_str = r"\begin{bmatrix}"
+    if len(shape) == 1:
+        shape = (shape[0], 1)
 
-    for i in range(shape[0]):
-        row_str = " & ".join(map(str, matrix[i]))
+    matrix_str = r"\begin{bmatrix}"
+    for i in range(shape[1]):
+        row_str = " & ".join([str(x) for x in list(matrix)])
         matrix_str += row_str + r" \\ "  # Используем \\ для перехода на новую строку
     matrix_str = matrix_str[:-3]  # Убираем последний перевод строки
     matrix_str += r"\end{bmatrix}"

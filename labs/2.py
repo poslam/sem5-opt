@@ -33,9 +33,10 @@ def F(
     x: np.ndarray,
     r: int,
 ) -> np.ndarray:
-    result = A @ x[: len(x0)] + 2 * x[-1] * (x[: len(x0)] - x0) + b
-    result = np.append(result, np.linalg.norm(x[: len(x0)] - x0) ** 2 - r**2)
-    return result
+    return np.append(
+        A @ x[: len(x0)] + 2 * x[-1] * (x[: len(x0)] - x0) + b,
+        np.linalg.norm(x[: len(x0)] - x0) ** 2 - r**2,
+    )
 
 
 def newton(A, x0, r, b, start, eps=eps):
@@ -94,11 +95,11 @@ check matrix A if it's symmetric and not singular: {check_matrix(A)}
 
 solution (if y = 0): 
 
-x = {x_min}
+x* = {x_min}
 f = {f(A, x_min, b)}
 norm = {np.linalg.norm(x_min - x0)}
 r = {r}
-norm <= r? {np.linalg.norm(x_min) <= r}
+norm <= r? {np.linalg.norm(x_min - x0) <= r}
 
 solution (if y > 0):
 """
