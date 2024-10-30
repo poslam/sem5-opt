@@ -68,6 +68,9 @@ b = np.array([1, 2, 3, 4])
 x0 = np.array([1, 1, 1, 1])
 r = 5
 
+if not check_matrix(A):
+    raise ValueError("Matrix A is not symmetric or singular")
+
 # if y = 0
 
 x_min = -np.linalg.inv(A) @ b
@@ -106,4 +109,6 @@ solution (if y > 0):
 )
 
 for i in range(len(res)):
-    print(f"{i+1} \t f: {f(A, res[i][:4], b)} \t x: {res[i]}")
+    print(
+        f"{i+1} f: {f(A, res[i][:4], b)} \t x: {res[i]} \t y: {round(res[i][-1], 5)} \n"
+    )
