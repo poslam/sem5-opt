@@ -1,206 +1,188 @@
 import sys
 
 import numpy as np
-from tabulate import tabulate
 
-
-def print_matrix(matrix):
-    if len(matrix.shape) == 1:
-        matrix = matrix.reshape((1, matrix.shape[0]))
-    str_matrix = [[str(cell) for cell in row] for row in matrix]
-    print(f"{tabulate(str_matrix, tablefmt='fancy_grid')}\n")
+from labs.funcs import *
 
 
 # Прямая задача
-def simplex_method(c, A, b):
+def simplex_method(tableau: np.ndarray):
+    m, n = tableau.shape
+    step = 0
 
-    # Число переменных и ограничений
+    while np.any(tableau[0, :-1] < 0):
+        step += 1
+        print(f"Шаг {step}:\n")
+
+        pivot_col = -1
+        min_value = 0
+        for j in range(
+            n - 1
+        ):  # Все элементы строки целевой функции, кроме последнего столбца (столбца b)
+            if (
+                tableau[0, j] < min_value
+            ):  # Ищем минимальное по значению (отрицательное)
+                min_value = tableau[0, j]
+                pivot_col = j
+
+        # Шаг 3: Выбираем выходящую переменную — наименьшее положительное отношение свободного члена к элементу столбца
+        pivot_row = -1
+        min_ratio = np.float64("inf")
+        for i in range(
+            1, m
+        ):  # Начинаем с 1-й строки, т.к. 0-я строка — это строка целевой функции
+            if tableau[i, pivot_col] > 0:  # Ищем положительные элементы в столбце
+                ratio = tableau[i, -1] / tableau[i, pivot_col]
+                if (
+                    ratio < min_ratio and ratio >= 0
+                ):  # Ищем минимальное положительное отношение
+                    min_ratio = ratio
+                    pivot_row = i
+
+        # Если нет подходящих строк, задача неограничена
+        if pivot_row == -1:
+            raise ValueError(
+                "Задача неограничена (нет ограничений, которые сдерживают решение)."
+            )
+
+        # Шаг 4: Поворот — обновляем таблицу симплекс-метода
+        pivot_value = tableau[pivot_row, pivot_col]
+
+        # Преобразуем разрешающую строку (делим её на разрешающий элемент)
+        tableau[pivot_row] /= pivot_value
+
+        # Преобразуем остальные строки (вычитаем из них соответствующие пропорциональные значения)
+        for i in range(m):
+            if i != pivot_row:
+                tableau[i] -= tableau[i, pivot_col] * tableau[pivot_row]
+
+        # Вывод информации о текущем шаге
+
+        print()
+        print(
+            f"Разрешающий элемент: строка {pivot_row + 1}, столбец {pivot_col + 1} = {pivot_value}"
+        )
+        print()
+
+        print_matrix(tableau, header="Текущая симплекс таблица:")
+
+        print("═" * 500)
+
+    solution = np.zeros(n - 1)  # Все переменные по умолчанию равны 0
+    for i in range(
+        1, m
+    ):  # Пропускаем первую строку (целевая функция) # по ширине матрицы А
+        # Если в строке разрешающий элемент на диагонали
+
+        pivot_col = np.where(tableau[i, :-1] == 1)[0]  # Ищем индекс переменной в строке
+        if pivot_col.size > 0:
+            solution[pivot_col[0]] = tableau[i, -1]  # Считываем значение переменной
+
+    # Если все элементы целевой функции неотрицательные, то решение найдено
+    return tableau[0, -1], solution  # Решение — это столбец b (все переменные решения)
+
+
+def main():
+    A = np.array(
+        [
+            [15, 115, 106, 290, 232, 167],
+            [79, 247, 7, 286, 65, 276],
+            [219, 125, 174, 42, 114, 202],
+            [287, 213, 225, 274, 169, 260],
+            [202, 124, 211, 200, 174, 183],
+            [158, 265, 1, 39, 113, 290],
+            [175, 196, 170, 270, 187, 178],
+            [245, 100, 226, 63, 245, 259],
+        ]
+    )
+
+    b = np.array(
+        [
+            [296],
+            [85],
+            [22],
+            [47],
+            [247],
+            [28],
+            [125],
+            [218],
+        ]
+    )
+
+    c = np.array([[173, 299, 240, 120, 249, 86]])
+
+    ### прямая задача ---------------------------------------------------------------
+
+    print("Прямая задача:")
+
     m, n = A.shape
 
-    # Создаем симплекс-таблицу
     tableau = np.zeros((m + 1, n + m + 1))
 
-    # Заполняем таблицу
     tableau[1:, :n] = A  # Ограничения
     tableau[1:, n : n + m] = np.eye(m)  # Добавляем базисные переменные
-    tableau[1:, -1] = b  # Свободные члены
+    tableau[1:, -1:] = b  # Свободные члены
     tableau[0, :n] = -c  # Целевая функция (сверху)
 
-    # Симплекс-итерации
-    step = 0
-    while True:
-        print_matrix(tableau, header="Симплекс-таблица Шаг " + str(step + 1))
+    print_matrix(tableau, header="Исходная таблица")
 
-        # Шаг 1: Проверяем, достигнут ли оптимум
-        if np.all(tableau[0, :-1] >= 0):
-            print("Оптимум достигнут.")
-            break
+    x, result = simplex_method(tableau)
+    result = result[: A.shape[1]]
 
-        # Шаг 2: Выбираем разрешающий столбец (самый отрицательный элемент в первой строке)
-        pivot_col = np.argmin(tableau[0, :-1])
-        print(f"Разрешающий столбец: {pivot_col  + 1}")
+    print_matrix(np.array([result]), header="Начальное угловое решение")
+    print(f"Целевая функция: {x}")
+    print("\n\n", "═" * 500, "\n", "═" * 500, "\n", "═" * 500, "\n\n")
 
-        # Шаг 3: Вычисляем отношение свободного члена к элементу столбца
-        ratios = []
-        for i in range(1, m + 1):
-            if tableau[i, pivot_col] > 0:
-                ratios.append(tableau[i, -1] / tableau[i, pivot_col])
-            else:
-                ratios.append(np.inf)
-        pivot_row = (
-            np.argmin(ratios) + 1
-        )  # Сдвигаем индекс, т.к. первая строка - это `-c`
+    ### вспомогательная задача ----------------------------------------------------------
 
-        if ratios[pivot_row - 1] == np.inf:
-            raise ValueError("Задача не имеет ограниченного решения.")
+    print("Вспомогательная задача")
 
-        # Определяем разрешающий элемент
-        pivot_element = tableau[pivot_row, pivot_col]
-        print(f"Разрешающая строка: {pivot_row + 1}")
-        print(f"Разрешающий элемент: {pivot_element}")
-
-        # Шаг 4: Приводим разрешающий элемент к 1
-        tableau[pivot_row, :] /= pivot_element
-
-        # Шаг 5: Обновляем таблицу
-        for i in range(m + 1):
-            if i != pivot_row:
-                tableau[i, :] -= tableau[i, pivot_col] * tableau[pivot_row, :]
-
-        step += 1
-
-    # Оптимальное значение
-    optimal_value = tableau[0, -1]
-
-    # Вектор переменных
-    x = np.zeros(n)
-    for i in range(n):
-        col = tableau[1:, i]
-        if np.count_nonzero(col) == 1 and np.sum(col) == 1:
-            x[i] = tableau[
-                np.argmax(col) + 1, -1
-            ]  # Учитываем смещение из-за строки `-c`
-
-    return optimal_value, x
-
-
-# Двойственная задача
-def dual_simplex_method(A, b, c):
-
-    # Транспонируем A, так как в двойственной задаче ограничения зависят от A^T
     A_T = A.T
+    b_T = b.T
+    c_T = c.T
 
-    # Число переменных и ограничений
     m, n = A_T.shape
 
-    # Создаем симплекс-таблицу
-    tableau = np.zeros((m + 1, n + m + 1))
+    tableau = np.zeros((m + 1, n + m + m + 1))
+    tableau[1:, :n] = A_T  # Ограничения
+    tableau[1:, n : n + m] = -1 * np.eye(m)  # Добавляем базисные переменные
+    tableau[1:, n + m : n + m + m] = np.eye(m)  # Добавляем базисные переменные
+    tableau[1:, -1:] = c_T  # Свободные члены
+    tableau[0, n * 2 - 2 : -1] = np.array(
+        [1 for i in range(m)]
+    )  # Целевая функция (сверху)
 
-    # Заполняем таблицу
-    tableau[:m, :n] = A_T  # Ограничения
-    tableau[:m, n : n + m] = np.eye(m)  # Базисные переменные
-    tableau[:m, -1] = c  # Вектор свободных членов
-    tableau[-1, n : n + m] = -b  # Целевая функция
+    print_matrix(tableau, header="Исходная таблица")
 
-    # Симплекс-итерации
-    step = 0
-    while True:
-        print_matrix(tableau, header="Симплекс-таблица Шаг " + str(step + 1))
+    for i in range(1, m + 1):
+        tableau[0] += tableau[i] * -1
 
-        # Проверяем, достигнут ли оптимум
-        if np.all(tableau[:-1, -1] >= 0):
-            print("Оптимум достигнут.")
-            break
+    x, result = simplex_method(tableau)
 
-        # Выбираем разрешающую строку (самый отрицательный элемент в последнем столбце)
-        pivot_row = np.argmin(tableau[:-1, -1])
-        print(f"Разрешающий столбец: {pivot_col  + 1}")
+    print_matrix(np.array([result]), header="Начальное угловое решение")
+    print(f"Целевая функция: {x}")
+    print("\n\n", "═" * 500, "\n", "═" * 500, "\n", "═" * 500, "\n\n")
 
-        # Выбираем разрешающий столбец
-        pivot_col = None
-        min_ratio = np.inf
-        for j in range(n + m):
-            if tableau[pivot_row, j] < 0:
-                ratio = abs(tableau[-1, j] / tableau[pivot_row, j])
-                if ratio < min_ratio:
-                    min_ratio = ratio
-                    pivot_col = j
-        if pivot_col is None:
-            raise ValueError("Задача не имеет ограниченного решения.")
+    ### двойственная задача ----------------------------------------------------------
 
-        # Разрешающий элемент
-        pivot_element = tableau[pivot_row, pivot_col]
-        print(f"Разрешающая строка: {pivot_row + 1}")
-        print(f"Разрешающий элемент: {pivot_element}")
+    print("Двойственная задача")
 
-        # Приводим разрешающий элемент к 1
-        tableau[pivot_row, :] /= pivot_element
+    # tableau = np.hstack((tableau[: , :n  ] ))
 
-        # Обновляем таблицу
-        for i in range(m + 1):
-            if i != pivot_row:
-                tableau[i, :] -= tableau[i, pivot_col] * tableau[pivot_row, :]
+    tableau = np.hstack((tableau[:, : n + m], tableau[:, -1:]))
+    filler_b = np.array([[0 for _ in range(tableau.shape[1] - b_T.shape[1])]])
+    filler_b = np.hstack((b_T, filler_b))
 
-        step += 1
+    tableau[0] = filler_b
 
-    # Оптимальное значение
-    optimal_value = tableau[-1, -1]
+    print_matrix(tableau, header="Исходная таблица")
 
-    # Переменные y
-    y = np.zeros(m)
-    for i in range(m):
-        col = tableau[:m, n + i]
-        if np.count_nonzero(col) == 1 and np.sum(col) == 1:
-            y[i] = tableau[np.argmax(col), -1]
+    x, result = simplex_method(tableau)
 
-    return optimal_value, y
+    print_matrix(np.array([result]), header="Решение")
+    print(f"Целевая функция: {x}")
 
 
-sys.stdout = open("lab3/output.txt", "w")
-
-# A = generate_matrix((8, 6) , low=1 , high=100)
-# b = generate_matrix((8, 1) , low=1 , high=100)
-# c = generate_matrix((1, 6) , low=1 , high=100)
-
-A = np.array(
-    [
-        [15, 115, 106, 290, 232, 167],
-        [79, 247, 7, 286, 65, 276],
-        [219, 125, 174, 42, 114, 202],
-        [287, 213, 225, 274, 169, 260],
-        [202, 124, 211, 200, 174, 183],
-        [158, 265, 1, 39, 113, 290],
-        [175, 196, 170, 270, 187, 178],
-        [245, 100, 226, 63, 245, 259],
-    ]
-)
-
-b = np.array([296, 85, 22, 47, 247, 28, 125, 218])
-
-c = np.array([173, 299, 240, 120, 249, 86])
-
-# print_matrix(A, header="Матрица A")
-
-# print_matrix(b, header="Вектор b")
-
-# print_matrix(c, header="Вектор c")
-
-
-print("Прямая задача:")
-
-opt_value, variables = simplex_method(c, A, b.T)
-print("\nОптимальное значение:", opt_value)
-print(variables)
-
-print()
-
-print()
-
-print()
-
-
-print("Двойственная задача:")
-
-opt_value, variables = dual_simplex_method(A, b, c)
-print("\nОптимальное значение:", opt_value)
-print(variables)
+if __name__ == "__main__":
+    sys.stdout = open("./labs/output.txt", "w")
+    main()
