@@ -1,7 +1,8 @@
+# my working
+
 import sys
 
 import numpy as np
-import scipy.optimize as opt
 
 from labs.funcs import *
 
@@ -125,49 +126,10 @@ def second_way(A, b, c):
 
     print_matrix(tableau, header="Исходная таблица")
 
-    for i in range(1, n + 1):
-        tableau[0] += -tableau[i]
-
-    print_matrix(tableau, header="next")
-
     x, result = simplex_method(tableau)
 
     print_matrix(np.array([result]), header="Решение")
     print(f"Целевая функция: {x}")
-
-
-# def second_way(A, b, c):
-#     # Для задачи максимизации:
-#     # Прямая:    max c^T x
-#     #           s.t. Ax <= b
-
-#     # Двойственная должна быть:
-#     # min b^T y
-#     # s.t. A^T y >= c
-#     # y >= 0
-
-#     A_T = A.T
-#     b_T = b.T
-#     c_T = c.T
-
-#     n, m = A_T.shape
-
-#     # Нужно изменить знаки неравенств и целевую функцию:
-#     tableau = np.zeros((n + 1, m + n + n + 1))
-#     tableau[1:, :m] = -A_T  # Меняем знак матрицы
-#     tableau[0, :m] = b_T  # Коэффициенты новой целевой функции
-#     tableau[1:, m : m + n] = np.eye(n)
-#     # tableau[1:, -1] = -c_T  # Меняем знак правых частей
-#     tableau[1:, -1:] = -c_T
-
-#     print_matrix(tableau, header="Исходная таблица двойственной задачи")
-
-#     x, result = simplex_method(tableau)
-
-#     print(x)
-
-#     # Результат нужно взять с обратным знаком
-#     return -x, -result
 
 
 ### data --------------------------------------------------------------------------
@@ -198,14 +160,14 @@ b = np.array(
     ]
 )
 
+# b = np.array([[296, 85, 22, 47, 247, 28, 125, 218]])
+
 c = np.array([[173, 299, 240, 120, 249, 86]])
 
 # low, high = 0, 100
 
 # A = np.random.uniform(low, high, (8, 6))
-
 # b = np.random.uniform(low, high, (8, 1))
-
 # c = np.random.uniform(low, high, (1, 6))
 
 
