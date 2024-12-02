@@ -1,138 +1,128 @@
-# my working
-
-import sys
-
 import numpy as np
 
-from labs.funcs import *
-
-sys.stdout = open("./labs/output.txt", "w")
+from labs.funcs import print_matrix
 
 
-def simplex_method(tableau: np.ndarray) -> tuple[float, np.ndarray]:
-    n, m = tableau.shape
-    step = 1
-
-    while np.any(tableau[0, :-1] < 0):
-        pivot_col = -1
-        min_value = 0
-        for j in range(m - 1):
-            if tableau[0, j] < min_value:
-                min_value = tableau[0, j]
-                pivot_col = j
-
-        pivot_row = -1
-        min_ratio = np.float64("inf")
-        for i in range(1, n):
-            if tableau[i, pivot_col] > 0:
-                ratio = tableau[i, -1] / tableau[i, pivot_col]
-                if ratio < min_ratio and ratio >= 0:
-                    min_ratio = ratio
-                    pivot_row = i
-
-        if pivot_row == -1:
-            raise ValueError("no solution")
-
-        pivot_value = tableau[pivot_row, pivot_col]
-
-        tableau[pivot_row] /= pivot_value
-
-        for i in range(n):
-            if i != pivot_row:
-                tableau[i] -= tableau[i, pivot_col] * tableau[pivot_row]
-
-        print(f"step:\t{step}\tpivot_value:\t{pivot_value}")
-        print_matrix(tableau)
-
-        step += 1
-
-    solution = np.zeros(m - 1)
-    for i in range(1, n):
-        pivot_col = np.where(tableau[i, :-1] == 1)[0]
-        if pivot_col.size > 0:
-            solution[pivot_col[0]] = tableau[i, -1]
-
-    return tableau[0, -1], solution
+def make_matrix(A: np.ndarray, b: np.ndarray, c: np.ndarray):
+    return np.vstack(
+        (
+            np.hstack((np.reshape(b, (A.shape[0], 1)), A, np.eye(A.shape[0]))),
+            np.hstack(((np.array([0])), -c, np.zeros((A.shape[0])))),
+        )
+    )
 
 
-def first_way(
-    A: np.ndarray,
-    b: np.ndarray,
-    c: np.ndarray,
-) -> tuple[float, np.ndarray]:
-    print("Прямая задача:")
-
-    n, m = A.shape
-
-    tableau = np.zeros((n + 1, m + n + 1))
-
-    tableau[1:, :m] = A
-    tableau[1:, m : m + n] = np.eye(n)
-    tableau[1:, -1:] = b
-    tableau[0, :m] = -c
-
-    print_matrix(tableau, header="Исходная таблица")
-
-    x, result = simplex_method(tableau)
-    result = result[: A.shape[1]]
-
-    print(f"\nЦелевая функция: {x}\n")
-    print_matrix(np.array([result]), header="Начальное угловое решение")
-
-    return x, result
+def make_dual_matrix(A: np.ndarray, b: np.ndarray, c: np.ndarray):
+    return np.vstack(
+        (
+            np.hstack((np.reshape(-c, (A.shape[0], 1)), -A, np.eye(A.shape[0]))),
+            np.hstack(((np.array([0])), -b, np.zeros((A.shape[0])))),
+        )
+    )
 
 
-def additional_task(A_T, b_T, c_T):
-    print("Вспомогательная задача")
-    n, m = A_T.shape
+def simplex(simplex_matrix: np.ndarray):
+    while True:
+        index_of_element = simplex_matrix[-1, 1:].argmin()
 
-    tableau = np.zeros((n + 1, m + n + n + 1))
-    tableau[1:, :m] = A_T
-    tableau[1:, m : m + n] = -1 * np.eye(n)
-    tableau[1:, m + n : m + n + n] = np.eye(n)
-    tableau[1:, -1:] = c_T
-    tableau[0, m * 2 - 2 : -1] = np.array([1 for i in range(n)])
+        if simplex_matrix[-1, 1:][index_of_element] >= 0:
+            break
 
-    for i in range(1, n + 1):
-        tableau[0] += tableau[i] * -1
+        else:
+            min_element = np.inf
+            min_line = 0
+            index_of_element += 1
 
-    print_matrix(tableau, header="Исходная таблица")
-    x, result = simplex_method(tableau)
+            for line in range(simplex_matrix.shape[0] - 1):
+                if (
+                    simplex_matrix[line, index_of_element] > 0
+                    and simplex_matrix[line, 0] / simplex_matrix[line, index_of_element]
+                    < min_element
+                ):
+                    min_line = line
+                    min_element = (
+                        simplex_matrix[line, 0] / simplex_matrix[line, index_of_element]
+                    )
 
-    print_matrix(np.array([result]), header="Начальное угловое решение")
-    print(f"Целевая функция: {x}")
+            print(
+                (min_line, int(index_of_element)),
+                simplex_matrix[min_line, int(index_of_element)],
+                simplex_matrix[-1, int(index_of_element)],
+            )
+            print_matrix(simplex_matrix)
 
-    return tableau, b_T
+            simplex_matrix[min_line, :] = (
+                simplex_matrix[min_line, :] / simplex_matrix[min_line, index_of_element]
+            )
 
+            for line in range(simplex_matrix.shape[0]):
+                if line == min_line:
+                    continue
 
-def second_way(A, b, c):
-    A_T = A.T
-    b_T = b.T
-    c_T = c.T
+                simplex_matrix[line, :] = (
+                    simplex_matrix[line, :]
+                    - simplex_matrix[min_line, :]
+                    * simplex_matrix[line, index_of_element]
+                )
 
-    n, m = A_T.shape
+    print_matrix(simplex_matrix)
 
-    tableau, b_T = additional_task(A_T, b_T, c_T)
-
-    print("\n\n", "═" * 500, "\n", "═" * 500, "\n", "═" * 500, "\n\n")
-
-    print("Двойственная задача")
-
-    tableau = np.hstack((tableau[:, : m + n], tableau[:, -1:]))
-    filler_b = np.array([[0 for _ in range(tableau.shape[1] - b_T.shape[1])]])
-    filler_b = np.hstack((b_T, filler_b))
-
-    tableau[0] = filler_b
-
-    print_matrix(tableau, header="Исходная таблица")
-
-    x, result = simplex_method(tableau)
-
-    print_matrix(np.array([result]), header="Решение")
-    print(f"Целевая функция: {x}")
+    return -simplex_matrix[-1, 0], simplex_matrix
 
 
-### data --------------------------------------------------------------------------
+def dual_simplex(simplex_matrix: np.ndarray):
+    while True:
+        index_of_element = simplex_matrix[:-1, 0].argmin()
+
+        if simplex_matrix[:-1, 0][index_of_element] >= 0:
+            break
+
+        else:
+            min_element = np.inf
+            min_column = 0
+
+            for column in range(1, simplex_matrix.shape[1]):
+                if simplex_matrix[-1, column] == 0:
+                    continue
+
+                if (
+                    simplex_matrix[index_of_element, column] < 0
+                    and abs(
+                        simplex_matrix[-1, column]
+                        / simplex_matrix[index_of_element, column]
+                    )
+                    < min_element
+                ):
+                    min_column = column
+                    min_element = abs(
+                        simplex_matrix[-1, column]
+                        / simplex_matrix[index_of_element, column]
+                    )
+
+            print(
+                (int(index_of_element), min_column),
+                simplex_matrix[int(index_of_element), min_column],
+                simplex_matrix[:-1, 0][index_of_element],
+            )
+            print_matrix(simplex_matrix)
+
+            simplex_matrix[index_of_element, :] /= simplex_matrix[
+                index_of_element, min_column
+            ]
+
+            for line in range(simplex_matrix.shape[0]):
+                if line == index_of_element:
+                    continue
+
+                simplex_matrix[line, :] -= (
+                    simplex_matrix[index_of_element, :]
+                    * simplex_matrix[line, min_column]
+                )
+
+    print_matrix(simplex_matrix)
+
+    return -simplex_matrix[-1, 0], simplex_matrix
+
 
 A = np.array(
     [
@@ -147,36 +137,15 @@ A = np.array(
     ]
 )
 
-b = np.array(
-    [
-        [296],
-        [85],
-        [22],
-        [47],
-        [247],
-        [28],
-        [125],
-        [218],
-    ]
-)
+b = np.array([296, 85, 22, 47, 247, 28, 125, 218])
+c = np.array([173, 299, 240, 120, 249, 86])
 
-# b = np.array([[296, 85, 22, 47, 247, 28, 125, 218]])
+print("Прямая задача", end="\n\n")
 
-c = np.array([[173, 299, 240, 120, 249, 86]])
+x1 = simplex(make_matrix(A, b, c))
 
-# low, high = 0, 100
+print("Двойственная задача", end="\n\n")
 
-# A = np.random.uniform(low, high, (8, 6))
-# b = np.random.uniform(low, high, (8, 1))
-# c = np.random.uniform(low, high, (1, 6))
+x2 = dual_simplex(make_dual_matrix(A.T, b, c))
 
-
-### прямая задача ------------------------------------------------------------------
-
-first_way(A, b, c)
-
-print("\n", "═" * 500, "\n", "═" * 500, "\n", "═" * 500, "\n\n")
-
-### двойственная задача ------------------------------------------------------------
-
-second_way(A, b, c)
+print(x1[0], x2[0], np.abs(x1[0] - x2[0]))
