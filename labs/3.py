@@ -1,6 +1,11 @@
+# src: https://drive.google.com/file/d/1-ItLEAsiiBhwEhRflFU0Te9w-D73Boe5/view?usp=drive_link
+# О.В. Болотникова, Д.В. Тарасов: "Линейное программирование: симплекс-метод и двойственность"
+
 import numpy as np
 
 from labs.funcs import print_matrix
+
+ROUND_VAL = 3
 
 
 def make_matrix(A: np.ndarray, b: np.ndarray, c: np.ndarray):
@@ -36,23 +41,35 @@ def simplex(simplex_matrix: np.ndarray):
             for line in range(simplex_matrix.shape[0] - 1):
                 if (
                     simplex_matrix[line, index_of_element] > 0
-                    and simplex_matrix[line, 0] / simplex_matrix[line, index_of_element]
+                    and simplex_matrix[line, 0]
+                    / simplex_matrix[
+                        line,
+                        index_of_element,
+                    ]
                     < min_element
                 ):
                     min_line = line
                     min_element = (
-                        simplex_matrix[line, 0] / simplex_matrix[line, index_of_element]
+                        simplex_matrix[line, 0]
+                        / simplex_matrix[
+                            line,
+                            index_of_element,
+                        ]
                     )
 
             print(
-                (min_line, int(index_of_element)),
-                simplex_matrix[min_line, int(index_of_element)],
-                simplex_matrix[-1, int(index_of_element)],
+                f"index: {(min_line, int(index_of_element))}\n"
+                + f"focus func val: {round(simplex_matrix[-1, int(index_of_element)], ROUND_VAL)}\n"
+                + f"focus val: {round(simplex_matrix[min_line, int(index_of_element)], ROUND_VAL)}",
             )
             print_matrix(simplex_matrix)
 
             simplex_matrix[min_line, :] = (
-                simplex_matrix[min_line, :] / simplex_matrix[min_line, index_of_element]
+                simplex_matrix[min_line, :]
+                / simplex_matrix[
+                    min_line,
+                    index_of_element,
+                ]
             )
 
             for line in range(simplex_matrix.shape[0]):
@@ -65,6 +82,7 @@ def simplex(simplex_matrix: np.ndarray):
                     * simplex_matrix[line, index_of_element]
                 )
 
+    print("result: ")
     print_matrix(simplex_matrix)
 
     return -simplex_matrix[-1, 0], simplex_matrix
@@ -100,9 +118,9 @@ def dual_simplex(simplex_matrix: np.ndarray):
                     )
 
             print(
-                (int(index_of_element), min_column),
-                simplex_matrix[int(index_of_element), min_column],
-                simplex_matrix[:-1, 0][index_of_element],
+                f"index: {(int(index_of_element), min_column)}\n"
+                + f"focus func val: {round(simplex_matrix[:-1, 0][index_of_element], ROUND_VAL)}\n"
+                + f"focus val: {round(simplex_matrix[int(index_of_element), min_column], ROUND_VAL)}",
             )
             print_matrix(simplex_matrix)
 
@@ -119,6 +137,7 @@ def dual_simplex(simplex_matrix: np.ndarray):
                     * simplex_matrix[line, min_column]
                 )
 
+    print("result: ")
     print_matrix(simplex_matrix)
 
     return -simplex_matrix[-1, 0], simplex_matrix
@@ -140,12 +159,12 @@ A = np.array(
 b = np.array([296, 85, 22, 47, 247, 28, 125, 218])
 c = np.array([173, 299, 240, 120, 249, 86])
 
-print("Прямая задача", end="\n\n")
+print("simplex", end="\n\n")
 
 x1 = simplex(make_matrix(A, b, c))
 
-print("Двойственная задача", end="\n\n")
+print("dual simplex", end="\n\n")
 
 x2 = dual_simplex(make_dual_matrix(A.T, b, c))
 
-print(x1[0], x2[0], np.abs(x1[0] - x2[0]))
+print(f"simplex: {x1[0]}\ndual simplex: {x2[0]}\ndelta: {np.abs(x1[0] - x2[0])}\n")
