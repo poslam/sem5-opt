@@ -1,9 +1,18 @@
 # src: https://drive.google.com/file/d/1-ItLEAsiiBhwEhRflFU0Te9w-D73Boe5/view?usp=drive_link
 # О.В. Болотникова, Д.В. Тарасов: "Линейное программирование: симплекс-метод и двойственность"
+# pages: 28, 52
+
+"""
+for max:
+index_of_element = argmax()
+... <= 0: break
+return -
+c
+"""
 
 import numpy as np
 
-from labs.funcs import print_matrix
+from labs.funcs import print_matrix, print_matrix_latex
 
 ROUND_VAL = 3
 
@@ -12,7 +21,7 @@ def make_matrix(A: np.ndarray, b: np.ndarray, c: np.ndarray):
     return np.vstack(
         (
             np.hstack((np.reshape(b, (A.shape[0], 1)), A, np.eye(A.shape[0]))),
-            np.hstack(((np.array([0])), -c, np.zeros((A.shape[0])))),
+            np.hstack(((np.array([0])), c, np.zeros((A.shape[0])))),
         )
     )
 
@@ -20,7 +29,7 @@ def make_matrix(A: np.ndarray, b: np.ndarray, c: np.ndarray):
 def make_dual_matrix(A: np.ndarray, b: np.ndarray, c: np.ndarray):
     return np.vstack(
         (
-            np.hstack((np.reshape(-c, (A.shape[0], 1)), -A, np.eye(A.shape[0]))),
+            np.hstack((np.reshape(c, (A.shape[0], 1)), -A, np.eye(A.shape[0]))),
             np.hstack(((np.array([0])), -b, np.zeros((A.shape[0])))),
         )
     )
@@ -85,7 +94,7 @@ def simplex(simplex_matrix: np.ndarray):
     print("result: ")
     print_matrix(simplex_matrix)
 
-    return -simplex_matrix[-1, 0], simplex_matrix
+    return simplex_matrix[-1, 0], simplex_matrix
 
 
 def dual_simplex(simplex_matrix: np.ndarray):
@@ -140,7 +149,7 @@ def dual_simplex(simplex_matrix: np.ndarray):
     print("result: ")
     print_matrix(simplex_matrix)
 
-    return -simplex_matrix[-1, 0], simplex_matrix
+    return simplex_matrix[-1, 0], simplex_matrix
 
 
 A = np.array(
@@ -161,10 +170,10 @@ c = np.array([173, 299, 240, 120, 249, 86])
 
 print("simplex", end="\n\n")
 
-x1 = simplex(make_matrix(A, b, c))
+x1 = simplex(make_matrix(A, b, -c))
 
 print("dual simplex", end="\n\n")
 
-x2 = dual_simplex(make_dual_matrix(A.T, b, c))
+x2 = dual_simplex(make_dual_matrix(A.T, b, -c))
 
 print(f"simplex: {x1[0]}\ndual simplex: {x2[0]}\ndelta: {np.abs(x1[0] - x2[0])}\n")
