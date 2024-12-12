@@ -10,11 +10,12 @@ return -
 c
 """
 
+import sys
+
 import numpy as np
+from funcs import print_matrix, print_matrix_latex
 
-from labs.funcs import print_matrix, print_matrix_latex
-
-ROUND_VAL = 3
+sys.stdout = open("./labs/output.txt", "w", encoding="utf-8")
 
 
 def make_matrix(A: np.ndarray, b: np.ndarray, c: np.ndarray):
@@ -35,7 +36,7 @@ def make_dual_matrix(A: np.ndarray, b: np.ndarray, c: np.ndarray):
     )
 
 
-def simplex(simplex_matrix: np.ndarray):
+def simplex(simplex_matrix: np.ndarray, n: int, m: int):
     while True:
         index_of_element = simplex_matrix[-1, 1:].argmin()
 
@@ -68,8 +69,8 @@ def simplex(simplex_matrix: np.ndarray):
 
             print(
                 f"index: {(min_line, int(index_of_element))}\n"
-                + f"focus func val: {round(simplex_matrix[-1, int(index_of_element)], ROUND_VAL)}\n"
-                + f"focus val: {round(simplex_matrix[min_line, int(index_of_element)], ROUND_VAL)}",
+                + f"focus func val: {simplex_matrix[-1, int(index_of_element)]:.3f}\n"
+                + f"focus val: {simplex_matrix[min_line, int(index_of_element)]:.3f}",
             )
             print_matrix(simplex_matrix)
 
@@ -91,13 +92,21 @@ def simplex(simplex_matrix: np.ndarray):
                     * simplex_matrix[line, index_of_element]
                 )
 
+    ans = np.zeros(m)
+
+    for i in range(n - 1):
+        for j in range(1, m + 1):
+            if simplex_matrix[i, j] == 1:
+                ans[j - 1] = simplex_matrix[i, 0]
+                break
+
     print("result: ")
     print_matrix(simplex_matrix)
 
-    return simplex_matrix[-1, 0], simplex_matrix
+    return simplex_matrix[-1, 0], simplex_matrix, ans
 
 
-def dual_simplex(simplex_matrix: np.ndarray):
+def dual_simplex(simplex_matrix: np.ndarray, n: int, m: int):
     while True:
         index_of_element = simplex_matrix[:-1, 0].argmin()
 
@@ -128,8 +137,8 @@ def dual_simplex(simplex_matrix: np.ndarray):
 
             print(
                 f"index: {(int(index_of_element), min_column)}\n"
-                + f"focus func val: {round(simplex_matrix[:-1, 0][index_of_element], ROUND_VAL)}\n"
-                + f"focus val: {round(simplex_matrix[int(index_of_element), min_column], ROUND_VAL)}",
+                + f"focus func val: {simplex_matrix[:-1, 0][index_of_element]:.3f}\n"
+                + f"focus val: {simplex_matrix[int(index_of_element), min_column]:.3f}",
             )
             print_matrix(simplex_matrix)
 
@@ -146,10 +155,18 @@ def dual_simplex(simplex_matrix: np.ndarray):
                     * simplex_matrix[line, min_column]
                 )
 
+    ans = np.zeros(m)
+
+    for i in range(n - 1):
+        for j in range(1, m + 1):
+            if simplex_matrix[i, j] == 1:
+                ans[j - 1] = simplex_matrix[i, 0]
+                break
+
     print("result: ")
     print_matrix(simplex_matrix)
 
-    return simplex_matrix[-1, 0], simplex_matrix
+    return simplex_matrix[-1, 0], simplex_matrix, ans
 
 
 A = np.array(
@@ -163,8 +180,6 @@ A = np.array(
     ]
 )
 
-print_matrix(A)
-
 tmp = []
 
 for i in range(A.shape[0]):
@@ -176,23 +191,41 @@ tmp.clear()
 
 for i in range(A.shape[1]):
     tmp.append(max(A[:, i]))
-print("Верхняя цена игры:", min(tmp))
+
+print("Верхняя цена игры:", min(tmp), "\n")
 
 beta = A.min()
 
 A_cap: np.ndarray = A + np.abs(beta)
 
-print_matrix(A_cap)
+print_matrix(A_cap, header="A_cap")
 
-# b = np.array([296, 85, 22, 47, 247, 28, 125, 218])
-# c = np.array([173, 299, 240, 120, 249, 86])
+print("beta: ", beta, "\n")
 
-# print("simplex", end="\n\n")
+b = np.ones(A_cap.shape[0])
+c = np.ones(A_cap.shape[1])
 
-# x1 = simplex(make_matrix(A, b, -c))
+print("simplex", end="\n\n")
 
-# print("dual simplex", end="\n\n")
+x1 = simplex(
+    make_matrix(A_cap, b, -c),
+    n=A_cap.shape[0],
+    m=A_cap.shape[1],
+)
 
-# x2 = dual_simplex(make_dual_matrix(A.T, b, -c))
+print("dual simplex", end="\n\n")
 
-# print(f"simplex: {x1[0]}\ndual simplex: {x2[0]}\ndelta: {np.abs(x1[0] - x2[0])}\n")
+x2 = dual_simplex(
+    make_dual_matrix(A_cap.T, b, -c),
+    n=A_cap.shape[1],
+    m=A_cap.shape[0],
+)
+
+print_matrix(x1[2] / np.linalg.norm(x1[2]), "Оптимальная стратегия первого игрока")
+print_matrix(x2[2] / np.linalg.norm(x2[2]), "Оптимальная стратегия второго игрока")
+
+if np.abs(x1[0] - x2[0]) > 1e-15:
+    raise ValueError("straight != dual")
+
+print(f"alpha: {x1[0]:.5f}")
+print(f"Цена игры: {1 / x1[0] - np.abs(beta):.5f}")

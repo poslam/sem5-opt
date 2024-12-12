@@ -10,11 +10,14 @@ return -
 c
 """
 
+import sys
+
 import numpy as np
 
 from labs.funcs import print_matrix, print_matrix_latex
 
 ROUND_VAL = 3
+sys.stdout = open("./labs/output.txt", "w", encoding="utf-8")
 
 
 def make_matrix(A: np.ndarray, b: np.ndarray, c: np.ndarray):
