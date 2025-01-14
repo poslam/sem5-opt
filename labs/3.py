@@ -71,8 +71,8 @@ def simplex(simplex_matrix: np.ndarray):
 
             print(
                 f"index: {(min_line, int(index_of_element))}\n"
-                + f"focus func val: {round(simplex_matrix[-1, int(index_of_element)], ROUND_VAL)}\n"
-                + f"focus val: {round(simplex_matrix[min_line, int(index_of_element)], ROUND_VAL)}",
+                + f"focus func val: {simplex_matrix[-1, int(index_of_element)]:.3f}\n"
+                + f"focus val: {simplex_matrix[min_line, int(index_of_element)]:.3f}",
             )
             print_matrix(simplex_matrix)
 
@@ -131,8 +131,8 @@ def dual_simplex(simplex_matrix: np.ndarray):
 
             print(
                 f"index: {(int(index_of_element), min_column)}\n"
-                + f"focus func val: {round(simplex_matrix[:-1, 0][index_of_element], ROUND_VAL)}\n"
-                + f"focus val: {round(simplex_matrix[int(index_of_element), min_column], ROUND_VAL)}",
+                + f"focus func val: {simplex_matrix[:-1, 0][index_of_element]:.3f}\n"
+                + f"focus val: {simplex_matrix[int(index_of_element), min_column]:.3f}",
             )
             print_matrix(simplex_matrix)
 
