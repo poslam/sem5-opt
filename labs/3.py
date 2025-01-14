@@ -1,7 +1,3 @@
-# src: https://drive.google.com/file/d/1-ItLEAsiiBhwEhRflFU0Te9w-D73Boe5/view?usp=drive_link
-# О.В. Болотникова, Д.В. Тарасов: "Линейное программирование: симплекс-метод и двойственность"
-# pages: 28, 52
-
 """
 for max:
 index_of_element = argmax()
@@ -16,7 +12,6 @@ import numpy as np
 
 from labs.funcs import print_matrix, print_matrix_latex
 
-ROUND_VAL = 3
 sys.stdout = open("./labs/output.txt", "w", encoding="utf-8")
 
 
@@ -32,8 +27,8 @@ def make_matrix(A: np.ndarray, b: np.ndarray, c: np.ndarray):
 def make_dual_matrix(A: np.ndarray, b: np.ndarray, c: np.ndarray):
     return np.vstack(
         (
-            np.hstack((np.reshape(c, (A.shape[0], 1)), -A, np.eye(A.shape[0]))),
-            np.hstack(((np.array([0])), -b, np.zeros((A.shape[0])))),
+            np.hstack((np.reshape(c, (A.T.shape[0], 1)), -A.T, np.eye(A.T.shape[0]))),
+            np.hstack(((np.array([0])), -b, np.zeros((A.T.shape[0])))),
         )
     )
 
@@ -177,6 +172,6 @@ x1 = simplex(make_matrix(A, b, -c))
 
 print("dual simplex", end="\n\n")
 
-x2 = dual_simplex(make_dual_matrix(A.T, b, -c))
+x2 = dual_simplex(make_dual_matrix(A, b, -c))
 
 print(f"simplex: {x1[0]}\ndual simplex: {x2[0]}\ndelta: {np.abs(x1[0] - x2[0])}\n")

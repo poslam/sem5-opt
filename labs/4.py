@@ -1,7 +1,3 @@
-# src: https://drive.google.com/file/d/1-ItLEAsiiBhwEhRflFU0Te9w-D73Boe5/view?usp=drive_link
-# О.В. Болотникова, Д.В. Тарасов: "Линейное программирование: симплекс-метод и двойственность"
-# pages: 28, 52
-
 """
 for max:
 index_of_element = argmax()
@@ -30,8 +26,8 @@ def make_matrix(A: np.ndarray, b: np.ndarray, c: np.ndarray):
 def make_dual_matrix(A: np.ndarray, b: np.ndarray, c: np.ndarray):
     return np.vstack(
         (
-            np.hstack((np.reshape(c, (A.shape[0], 1)), -A, np.eye(A.shape[0]))),
-            np.hstack(((np.array([0])), -b, np.zeros((A.shape[0])))),
+            np.hstack((np.reshape(c, (A.T.shape[0], 1)), -A.T, np.eye(A.T.shape[0]))),
+            np.hstack(((np.array([0])), -b, np.zeros((A.T.shape[0])))),
         )
     )
 
@@ -218,7 +214,7 @@ x1 = simplex(
 print("dual simplex", end="\n\n")
 
 x2 = dual_simplex(
-    make_dual_matrix(A_cap.T, b, -c),
+    make_dual_matrix(A_cap, b, -c),
     n=A_cap.shape[1],
     m=A_cap.shape[0],
 )
