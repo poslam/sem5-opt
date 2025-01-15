@@ -65,11 +65,11 @@ def simplex(simplex_matrix: np.ndarray):
                     )
 
             print(
-                f"index: {(min_line, int(index_of_element))}\n"
-                + f"focus func val: {simplex_matrix[-1, int(index_of_element)]:.3f}\n"
-                + f"focus val: {simplex_matrix[min_line, int(index_of_element)]:.3f}",
+                f"Индекс: {(min_line, int(index_of_element))}\n"
+                # + f"focus func val: {simplex_matrix[-1, int(index_of_element)]:.3f}\n"
+                + f"Разрешающий элемент: {simplex_matrix[min_line, int(index_of_element)]:.3f}",
             )
-            print_matrix(simplex_matrix)
+            print_matrix_latex(simplex_matrix)
 
             simplex_matrix[min_line, :] = (
                 simplex_matrix[min_line, :]
@@ -90,7 +90,7 @@ def simplex(simplex_matrix: np.ndarray):
                 )
 
     print("result: ")
-    print_matrix(simplex_matrix)
+    print_matrix_latex(simplex_matrix)
 
     return simplex_matrix[-1, 0], simplex_matrix
 
@@ -125,11 +125,11 @@ def dual_simplex(simplex_matrix: np.ndarray):
                     )
 
             print(
-                f"index: {(int(index_of_element), min_column)}\n"
-                + f"focus func val: {simplex_matrix[:-1, 0][index_of_element]:.3f}\n"
-                + f"focus val: {simplex_matrix[int(index_of_element), min_column]:.3f}",
+                f"Индекс: {(int(index_of_element), min_column)}\n"
+                # + f"focus func val: {simplex_matrix[:-1, 0][index_of_element]:.3f}\n"
+                + f"Разрешающий элемент: {simplex_matrix[int(index_of_element), min_column]:.3f}",
             )
-            print_matrix(simplex_matrix)
+            print_matrix_latex(simplex_matrix)
 
             simplex_matrix[index_of_element, :] /= simplex_matrix[
                 index_of_element, min_column
@@ -145,26 +145,26 @@ def dual_simplex(simplex_matrix: np.ndarray):
                 )
 
     print("result: ")
-    print_matrix(simplex_matrix)
+    print_matrix_latex(simplex_matrix)
 
     return simplex_matrix[-1, 0], simplex_matrix
 
 
 A = np.array(
     [
-        [15, 115, 106, 290, 232, 167],
-        [79, 247, 7, 286, 65, 276],
-        [219, 125, 174, 42, 114, 202],
-        [287, 213, 225, 274, 169, 260],
-        [202, 124, 211, 200, 174, 183],
-        [158, 265, 1, 39, 113, 290],
-        [175, 196, 170, 270, 187, 178],
-        [245, 100, 226, 63, 245, 259],
+        [0, 115, 16, 29, 23, 197],
+        [98, 247, 7, 28, 65, 27],
+        [9, 125, 174, 421, 14, 202],
+        [5, 213, 225, 389, 69, 260],
+        [205, 124, 211, 6, 74, 183],
+        [207, 207, 13, 1, 5, 29],
+        [175, 196, 170, 270, 18, 178],
+        [24, 10, 226, 63, 24, 259],
     ]
 )
 
-b = np.array([296, 85, 22, 47, 247, 28, 125, 218])
-c = np.array([173, 299, 240, 120, 249, 86])
+b = np.array([4, 56, 32, 47, 247, 28, 67, 218])
+c = np.array([90, 302, 12, 25, 24, 87])
 
 print("simplex", end="\n\n")
 

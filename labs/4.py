@@ -68,7 +68,7 @@ def simplex(simplex_matrix: np.ndarray, n: int, m: int):
                 # + f"focus func val: {simplex_matrix[-1, int(index_of_element)]:.3f}\n"
                 + f"Разрешающий элемент: {simplex_matrix[min_line, int(index_of_element)]:.3f}",
             )
-            print_matrix(simplex_matrix)
+            print_matrix_latex(simplex_matrix)
 
             simplex_matrix[min_line, :] = (
                 simplex_matrix[min_line, :]
@@ -97,7 +97,7 @@ def simplex(simplex_matrix: np.ndarray, n: int, m: int):
                 break
 
     print("result: ")
-    print_matrix(simplex_matrix)
+    print_matrix_latex(simplex_matrix)
 
     return simplex_matrix[-1, 0], simplex_matrix, ans
 
@@ -136,7 +136,7 @@ def dual_simplex(simplex_matrix: np.ndarray, n: int, m: int):
                 # + f"focus func val: {simplex_matrix[:-1, 0][index_of_element]:.3f}\n"
                 + f"Разрешающий элемент: {simplex_matrix[int(index_of_element), min_column]:.3f}",
             )
-            print_matrix(simplex_matrix)
+            print_matrix_latex(simplex_matrix)
 
             simplex_matrix[index_of_element, :] /= simplex_matrix[
                 index_of_element, min_column
@@ -160,23 +160,23 @@ def dual_simplex(simplex_matrix: np.ndarray, n: int, m: int):
                 break
 
     print("result: ")
-    print_matrix(simplex_matrix)
+    print_matrix_latex(simplex_matrix)
 
     return simplex_matrix[-1, 0], simplex_matrix, ans
 
 
 A = np.array(
     [
-        [0, -16, -41, 48, 19, 84, 69, 33],
-        [82, 98, -50, 84, -52, -47, -95, -20],
-        [65, 12, 61, -88, -18, -85, 34, -10],
-        [72, 37, 9, 28, 33, -31, 85, 18],
-        [32, -24, -70, -70, 53, 60, 22, 60],
-        [12, -37, 53, 81, -34, 21, -29, -67],
+        [0, 16, -4, 48, 19, 84, 69, 33],
+        [78, 9, -501, 84, -52, -47, -95, -20],
+        [9, 15, 651, -88, -18, -85, 34, -10],
+        [45, 7, 91, 28, 33, -31, 85, 18],
+        [5, -4, 71, -70, 53, 60, 22, 60],
+        [66, 31, -5, 81, -34, 21, -29, -67],
     ]
 )
 
-print_matrix(A)
+print_matrix_latex(A)
 
 tmp = []
 
@@ -196,7 +196,7 @@ beta = A.min()
 
 A_cap: np.ndarray = A + np.abs(beta)
 
-print_matrix(A_cap, header="A_cap")
+print_matrix_latex(A_cap, header="A_cap")
 
 print("beta: ", beta, "\n")
 
@@ -219,8 +219,8 @@ x2 = dual_simplex(
     m=A_cap.shape[0],
 )
 
-print_matrix(x1[2] / np.linalg.norm(x1[2]), "Оптимальная стратегия первого игрока")
-print_matrix(x2[2] / np.linalg.norm(x2[2]), "Оптимальная стратегия второго игрока")
+print_matrix_latex(x1[2] / np.linalg.norm(x1[2]), "Оптимальная стратегия первого игрока")
+print_matrix_latex(x2[2] / np.linalg.norm(x2[2]), "Оптимальная стратегия второго игрока")
 
 if np.abs(x1[0] - x2[0]) > 1e-15:
     raise ValueError("straight != dual")
